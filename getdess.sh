@@ -149,7 +149,7 @@ install_docker () {
 
   # docker-compose
   if ! command_exists docker-compose; then
-    case $(uname -m) in
+    case "$(uname -m)" in
       x86_64|amd64) curl -fsSL "$compose_url/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose;;
       *)
         case "$os_release" in
@@ -171,14 +171,15 @@ install_docker () {
        
        # Define the output path and ensure the script is run with sudo if needed
        output='/usr/local/bin/docker-compose'
-       if [ ! -w $(dirname $output) ]; then
+       if [ ! -w "$(dirname "$output")" ]; then
            echo "You need to run this script with sudo."
            exit 1
        fi
        
        # Download docker-compose
-       ""curl -L https://github.com/docker/compose/releases/download/$compose_version/docker-compose-$(uname -s)-$(uname -m) -o $output""
-       
+       curl -L "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-$(uname -s)-$(uname -m)" -o "$output"
+       chmod +x "$output"
+
        # Set executable permissions
         chmod +x $output
 
