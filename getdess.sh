@@ -156,13 +156,34 @@ install_docker () {
           amzn) $pkg_man install -y libffi libffi-devel openssl-devel python3 python3-pip python3-devel gcc;;
           *) $pkg_man install -y python3 python3-pip;;
         esac;
-        # Setting up docker-compose in a virtualenv
-        python3 -m venv .venv;
-        source .venv/bin/activate;
-        compose_version=$(curl https://api.github.com/repos/docker/compose/releases/latest | jq .name -r)
-        output='/usr/local/bin/docker-compose'
-        curl -L https://github.com/docker/compose/releases/download/$compose_version/docker-compose-$(uname -s)-$(uname -m) -o $output
+       # Setting up docker-compose in a virtualenv
+       python3 -m venv .venv
+       source .venv/bin/activate
+       
+       # Ensure jq is installed
+       if ! command -v jq &> /dev/null; then
+           echo "jq could not be found, please install it."
+           exit 1
+       fi
+       
+       # Fetch the latest docker-compose version
+       compose_version=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq .name -r)
+       
+       # Define the output path and ensure the script is run with sudo if needed
+       output='/usr/local/bin/docker-compose'
+       if [ ! -w $(dirname $output) ]; then
+           echo "You need to run this script with sudo."
+           exit 1
+       fi
+       
+       # Download docker-compose
+       curl -L https://github.com/docker/compose/releases/download/$compose_version/docker-compose-$(uname -s)-$(uname -m) -o $output
+       
+       # Set executable permissions
         chmod +x $output
+      
+        echo "Docker-compose $compose_version installed successfully."
+      
       ;;
     esac
     COMPOSE_RESULT=$?
