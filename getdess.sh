@@ -139,7 +139,7 @@ install_docker () {
       # Need to add conditional for derivative distros
       echo \
         "deb [arch=\"$(dpkg --print-architecture)\" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-        "$(. /etc/os-release && echo \"$VERSION_CODENAME\")\" stable\" | \
+        $\"(. /etc/os-release && echo \"$\"VERSION_CODENAME\"\")"\" stable\" | \
         sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
       sudo apt-get update
       sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
@@ -177,7 +177,7 @@ install_docker () {
        fi
        
        # Download docker-compose
-       curl -L "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-$(uname -s)-$(uname -m)" -o "$output"
+       curl -L "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-\"$(uname -s)\"-\"$(uname -m)\"" -o "$output"
        chmod +x "$output"
 
        # Set executable permissions
