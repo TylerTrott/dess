@@ -147,55 +147,31 @@ install_docker () {
     esac
   fi
 
-  # docker-compose
-  if ! command_exists docker-compose; then
-    case "$(uname -m)" in
-      x86_64|amd64) curl -fsSL "$compose_url/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose;;
-      *)
-        case "$os_release" in
-          amzn) $pkg_man install -y libffi libffi-devel openssl-devel python3 python3-pip python3-devel gcc;;
-          *) $pkg_man install -y python3 python3-pip;;
-        esac;
-       # Setting up docker-compose in a virtualenv
-       python3 -m venv .venv
-       source .venv/bin/activate
-       
-       # Ensure jq is installed
-       if ! command -v jq &> /dev/null; then
-           echo "jq could not be found, please install it."
-           exit 1
-       fi
-       
-       # Fetch the latest docker-compose version
-       compose_version=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq .name -r)
-       
-       # Define the output path and ensure the script is run with sudo if needed
-       output='/usr/local/bin/docker-compose'
-       if [ ! -w "$(dirname "$output")" ]; then
-           echo "You need to run this script with sudo."
-           exit 1
-       fi
-       
-       # Download docker-compose
-       curl -L "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-\"$(uname -s)\"-\"$(uname -m)\"" -o "$output"
-       chmod +x "$output"
+  # Install docker-compose v2
+  echo "Installing Docker Compose v2..."
+  curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+  # Apply executable permissions to the binary
+  echo "Applying executable permissions to Docker Compose binary..."
+  chmod +x "${/usr/local/bin/docker-compose}"
 
-       # Set executable permissions
-        chmod +x $output
-
-        echo "Docker-compose $compose_version installed successfully."
-      ;;
-    esac
-    COMPOSE_RESULT=$?
-    echo "$COMPOSE_RESULT"
-    if [[ $COMPOSE_RESULT -gt 0 ]]; then
-      error_exit 51
-    fi
-    chown root:docker /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
+  # Test the installation
+  echo "Testing Docker Compose installation..."
+  if "${/usr/local/bin/docker-compose}" --version; then
+      echo "Docker Compose installed successfully."
+  else
+      echo "Docker Compose installation failed."
+      exit 1
   fi
-  ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-  systemctl enable --now docker.service
+
+  # Check if /usr/local/bin is in the PATH
+  if ! echo "$PATH" | grep -q "/usr/local/bin"; then
+      echo "/usr/local/bin is not in the PATH. Creating a symbolic link to /usr/bin..."
+      sudo ln -s "${/usr/local/bin/docker-compose}" /usr/bin/docker-compose
+  else
+      echo "/usr/local/bin is in the PATH. No need to create a symbolic link."
+  fi
+
+echo "Installation completed."
 }
 
 mkdir_atsign () {
